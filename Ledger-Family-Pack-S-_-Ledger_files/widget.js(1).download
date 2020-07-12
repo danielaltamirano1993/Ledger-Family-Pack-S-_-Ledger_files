@@ -1,0 +1,73 @@
+
+var yotpoWidgetsContainer = yotpoWidgetsContainer || { guids: {} };
+(function(){
+    var guid = "VjYC1hjLHPTTjBOJGQajJPG9ZjLqy7OBx6uqubzH";
+    var loader = {
+        loadDep: function (link, onLoad, strategy) {
+            var script = document.createElement('script');
+            script.onload = onLoad || function(){};
+            script.src = link;
+            if (strategy === 'defer') {
+                script.defer = true;
+            } else if (strategy === 'async') {
+                script.async = true;
+            }
+            script.setAttribute("type", "text/javascript");
+            script.setAttribute("charset", "utf-8");
+            document.head.appendChild(script);
+        },
+        config: {
+            data: {
+                guid: guid
+            },
+            widgets: {
+            
+            },
+            guidStaticContent: {},
+            dependencyGroups: {}
+        },
+        initializer: "https://cdn-widget-assets.yotpo.com/widgets-initializer/app.v0.0.47-3294.js",
+        analytics: "https://p.yotpo.com/js/bundle.js"
+    }
+    const initWidgets = function (config) {
+        const widgetInitializer = yotpoWidgetsContainer['yotpo_widget_initializer'](config);
+        return widgetInitializer.initWidgets();
+    };
+    const onInitializerLoad = function (config) {
+        const prevInitWidgets = yotpoWidgetsContainer.initWidgets;
+        yotpoWidgetsContainer.initWidgets = function () {
+            if (prevInitWidgets) {
+                if (typeof Promise !== 'undefind' && Promise.all) {
+                    return Promise.all([prevInitWidgets(), initWidgets(config)]);
+                }
+                console.warn('[deprecated] promise is not supported in initWidgets');
+                prevInitWidgets();
+            }
+            return initWidgets(config);
+        }
+        const guidWidgetContainer = getGuidWidgetsContainer();
+        guidWidgetContainer.initWidgets = function () {
+            return initWidgets(config);
+        }
+        guidWidgetContainer.initWidgets();
+    };
+    function getGuidWidgetsContainer () {
+        if (!yotpoWidgetsContainer.guids) {
+            yotpoWidgetsContainer.guids = {};
+        }
+        if (!yotpoWidgetsContainer.guids[guid]) {
+            yotpoWidgetsContainer.guids[guid] = {};
+        }
+        return yotpoWidgetsContainer.guids[guid];
+    }
+    const guidWidgetContainer = getGuidWidgetsContainer();
+    if (!guidWidgetContainer.yotpo_widget_scripts_loaded) {
+        guidWidgetContainer.yotpo_widget_scripts_loaded = true;
+        guidWidgetContainer.onInitializerLoad = function () { onInitializerLoad(loader.config) };
+        loader.loadDep(loader.analytics, function () {}, 'defer');
+        
+        loader.loadDep(loader.initializer, function () { guidWidgetContainer.onInitializerLoad() }, 'async');
+        
+    }
+})()
+
